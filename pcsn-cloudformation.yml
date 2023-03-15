@@ -1,0 +1,168 @@
+---
+Resources:
+  # VPC
+  PlagiarismCheckSystemVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: Plagiarism Check System Network
+
+  # Internet Gateway
+  PlagiarismCheckSystemInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: Plagiarism Check System Network Internet Gateway
+
+  # Internet Gateway Attachment
+  PlagiarismCheckSystemVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      InternetGatewayId: !Ref PlagiarismCheckSystemInternetGateway
+
+  # Public Subnets
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      AvailabilityZone: us-east-1a
+      CidrBlock: 10.0.1.0/24
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: Public Subnet 1
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      AvailabilityZone: us-east-1b
+      CidrBlock: 10.0.2.0/24
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: Public Subnet 2
+
+  # Private Subnets
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      AvailabilityZone: us-east-1c
+      CidrBlock: 10.0.3.0/24
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: Private Subnet 1
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      AvailabilityZone: us-east-1d
+      CidrBlock: 10.0.4.0/24
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: Private Subnet 2
+
+  # Security Groups
+  PCSNBastionHostSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows SSH traffic to Bastion Host
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: PCSN-Bastion-Host
+
+  PCSNPrivateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows SSH traffic from Bastion Host
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: PCSN-Private
+
+  # EC2 Instances
+  BastionHost1:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0557a15b87f6559cf # Ubuntu 18.04 LTS
+      KeyName: vockey
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds:
+        - !Ref PCSNBastionHostSecurityGroup
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: Bastion Host 1
+
+  BastionHost2:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0557a15b87f6559cf  # Ubuntu 18.04 LTS
+      KeyName: vockey
+      SubnetId: !Ref PublicSubnet2
+      SecurityGroupIds:
+        - !Ref PCSNBastionHostSecurityGroup
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: Bastion Host 2
+
+  PrivateInstance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0557a15b87f6559cf  # Ubuntu 18.04 LTS
+      KeyName: PCSN-Private-Key
+      SubnetId: !Ref PrivateSubnet1
+      SecurityGroupIds:
+        - !Ref PCSNPrivateSecurityGroup
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: Private Instance 1
+
+  PrivateInstance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0557a15b87f6559cf # Ubuntu 18.04 LTS
+      KeyName: PCSN-Private-Key
+      SubnetId: !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref PCSNPrivateSecurityGroup
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: Private Instance 2
