@@ -220,3 +220,54 @@ Resources:
           Value: Term Project
         - Key: Name
           Value: Private Instance 2
+
+  ################## S3 Bucket Configuration Here #####################
+
+  PCSNRawDocumentBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: pds-raw-documents
+
+  PCSNRawDocumentBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref PCSNRawDocumentBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: "s3:*"
+            Resource: !Join ['', ['arn:aws:s3:::', !Ref PCSNRawDocumentBucket, '/*']]
+            Condition:
+              StringEquals:
+                aws:sourceVpc: !Ref PlagiarismCheckSystemVPC
+              'ArnLike':
+                aws:SourceArn: !Join ['', ['arn:aws:ec2:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':subnet/', !Ref PrivateSubnet1]]
+              'ArnLike':
+                aws:SourceArn: !Join ['', ['arn:aws:ec2:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':subnet/', !Ref PrivateSubnet2]]
+
+  PCSNProcessedDocumentBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: pds-processed-documents
+
+  PCSNProcessedDocumentBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref PCSNProcessedDocumentBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: "s3:*"
+            Resource: !Join ['', ['arn:aws:s3:::', !Ref PCSNProcessedDocumentBucket, '/*']]
+            Condition:
+              StringEquals:
+                aws:sourceVpc: !Ref PlagiarismCheckSystemVPC
+              'ArnLike':
+                aws:SourceArn: !Join ['', ['arn:aws:ec2:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':subnet/', !Ref PrivateSubnet1]]
+              'ArnLike':
+                aws:SourceArn: !Join ['', ['arn:aws:ec2:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':subnet/', !Ref PrivateSubnet2]]
+
