@@ -71,6 +71,20 @@ Resources:
         - Key: Name
           Value: Public Subnet 2
 
+  PublicSubnet1RouteTableAssociation:
+    DependsOn: PublicSubnet1
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PlagiarismCheckSystemVPCRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2RouteTableAssociation:
+    DependsOn: PublicSubnet2
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PlagiarismCheckSystemVPCRouteTable
+      SubnetId: !Ref PublicSubnet2
+
   # Private Subnets
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
