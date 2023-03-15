@@ -28,6 +28,24 @@ Resources:
       VpcId: !Ref PlagiarismCheckSystemVPC
       InternetGatewayId: !Ref PlagiarismCheckSystemInternetGateway
 
+  PlagiarismCheckSystemVPCRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: Plagiarism Check System Network Route Table
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: PlagiarismCheckSystemVPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PlagiarismCheckSystemVPCRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref PlagiarismCheckSystemInternetGateway
+
   # Public Subnets
   PublicSubnet1:
     Type: AWS::EC2::Subnet
@@ -122,6 +140,17 @@ Resources:
         - Key: Name
           Value: Bastion Host 1
 
+  BastionHost1EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  BastionHost1EIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref BastionHost1
+      AllocationId: !GetAtt BastionHost1EIP.AllocationId
+
   BastionHost2:
     Type: AWS::EC2::Instance
     Properties:
@@ -136,6 +165,17 @@ Resources:
           Value: Term Project
         - Key: Name
           Value: Bastion Host 2
+
+  BastionHost2EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  BastionHost2EIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref BastionHost2
+      AllocationId: !GetAtt BastionHost2EIP.AllocationId
 
   PrivateInstance1:
     Type: AWS::EC2::Instance
