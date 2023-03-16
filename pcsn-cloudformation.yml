@@ -252,6 +252,15 @@ Resources:
     Properties:
       BucketName: pds-processed-documents
 
+  PCSNProcessedDocumentBucketEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Gateway
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      RouteTableIds: 
+        - !Ref PlagiarismCheckSystemVPCRouteTable
+
   PCSNProcessedDocumentBucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
     Properties:
@@ -270,4 +279,7 @@ Resources:
                 aws:SourceArn: !Join ['', ['arn:aws:ec2:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':subnet/', !Ref PrivateSubnet1]]
               'ArnLike':
                 aws:SourceArn: !Join ['', ['arn:aws:ec2:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':subnet/', !Ref PrivateSubnet2]]
+                'aws:sourceVpce': !Ref PCSNProcessedDocumentBucketEndpoint
+
+
 
