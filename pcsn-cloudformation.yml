@@ -301,7 +301,7 @@ Resources:
       Role: "arn:aws:iam::596092100714:role/LabRole"
       Runtime: "nodejs14.x"
 
-  MyLambdaFunctionPolicy:
+  PCSNFunctionPolicy:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:invokeFunction
@@ -314,7 +314,19 @@ Resources:
       AuthType: NONE
       TargetFunctionArn: !Ref PCSNFunction
 
+  PCSNSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: Processed Document SNS 
+      TopicName: document-processed
 
+  PCSNSNSTopicEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      TopicArn: !Ref PCSNSNSTopic
+      Endpoint: tarashagarwal26@gmail.com
+      
 Outputs:
   runtimeLambdaUrl:
     Value: !GetAtt RuntimeLambdaUrl.FunctionUrl
