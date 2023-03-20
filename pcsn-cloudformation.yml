@@ -179,9 +179,26 @@ Resources:
       InstanceId: !Ref BastionHost2
       AllocationId: !GetAtt BastionHost2EIP.AllocationId
 
-  PCSNPrivateSecurityGroup:
+  PCSNPrivateSecurityGroup1:
     DependsOn: 
       - BastionHost1
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows SSH traffic from Bastion Host
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Sub "${BastionHost1.PrivateIp}/32"
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: PCSN-Bastion-Host
+
+  PCSNPrivateSecurityGroup2:
+    DependsOn: 
       - BastionHost2
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -191,8 +208,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          # CidrIp:  !Join [",", [!Sub "${BastionHost1.PrivateIp}/32", !Sub "${BastionHost2.PrivateIp}/32"]]
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Sub "${BastionHost2.PrivateIp}/32"
       Tags:
         - Key: Type
           Value: Term Project
@@ -209,7 +225,7 @@ Resources:
       KeyName: PCSN-Private-Key
       SubnetId: !Ref PrivateSubnet1
       SecurityGroupIds:
-        - !Ref PCSNPrivateSecurityGroup
+        - !Ref PCSNPrivateSecurityGroup1
       Tags:
         - Key: Type
           Value: Term Project
@@ -225,7 +241,7 @@ Resources:
       KeyName: PCSN-Private-Key
       SubnetId: !Ref PrivateSubnet2
       SecurityGroupIds:
-        - !Ref PCSNPrivateSecurityGroup
+        - !Ref PCSNPrivateSecurityGroup2
       Tags:
         - Key: Type
           Value: Term Project
