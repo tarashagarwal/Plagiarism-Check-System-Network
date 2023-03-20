@@ -190,7 +190,8 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: !Sub "${BastionHost1.PrivateIp}/32"
+          # CidrIp: !Sub "${BastionHost1EIP.AllocationId}/32"
+          CidrIp: !Sub "0.0.0.0/0"
       Tags:
         - Key: Type
           Value: Term Project
@@ -208,7 +209,46 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: !Sub "${BastionHost2.PrivateIp}/32"
+          # CidrIp: !Sub "${BastionHost2EIP.AllocationId}/32"
+          CidrIp: !Sub "0.0.0.0/0"
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: PCSN-Bastion-Host
+
+  PCSNPrivateSecurityGroup11:
+    DependsOn: 
+      - BastionHost1
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows SSH traffic from Bastion Host
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          # CidrIp: !Sub "${BastionHost2EIP.AllocationId}/32"
+          CidrIp: !Sub "0.0.0.0/0"
+      Tags:
+        - Key: Type
+          Value: Term Project
+        - Key: Name
+          Value: PCSN-Bastion-Host
+
+  PCSNPrivateSecurityGroup22:
+    DependsOn: 
+      - BastionHost2
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows SSH traffic from Bastion Host
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          # CidrIp: !Sub "${BastionHost1EIP.AllocationId}/32"
+          CidrIp: !Sub "0.0.0.0/0"
       Tags:
         - Key: Type
           Value: Term Project
@@ -226,6 +266,7 @@ Resources:
       SubnetId: !Ref PrivateSubnet1
       SecurityGroupIds:
         - !Ref PCSNPrivateSecurityGroup1
+        - !Ref PCSNPrivateSecurityGroup11
       Tags:
         - Key: Type
           Value: Term Project
@@ -242,6 +283,7 @@ Resources:
       SubnetId: !Ref PrivateSubnet2
       SecurityGroupIds:
         - !Ref PCSNPrivateSecurityGroup2
+        - !Ref PCSNPrivateSecurityGroup22
       Tags:
         - Key: Type
           Value: Term Project
@@ -355,11 +397,92 @@ Resources:
       TopicArn: !Ref PCSNSNSTopic
       Endpoint: tarashagarwal26@gmail.com
       
+
+################################# NAT Gateway ##########################
+
+  NatGatewayEip1:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: "vpc"
+      Tags:
+        - Key: Name
+          Value: Lab NAT Gateway EIP
+
+  NatGateway1:
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId: !GetAtt NatGatewayEip1.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: Lab NAT Gateway 1
+
+  PrivateRouteTable1:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      Tags:
+        - Key: Name
+          Value: Private Route Table 1
+
+  PrivateRoute1:
+    Type: "AWS::EC2::Route"
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref NatGateway1
+
+  PublicSubnetRouteTableAssociation1:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable1
+
+  NatGatewayEip2:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: "vpc"
+      Tags:
+        - Key: Name
+          Value: PSCN NAT Gateway EIP
+
+  NatGateway2:
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId: !GetAtt NatGatewayEip2.AllocationId
+      SubnetId: !Ref PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: PSCN NAT Gateway 2
+
+  PrivateRouteTable2:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref PlagiarismCheckSystemVPC
+      Tags:
+        - Key: Name
+          Value: Private Route Table 2
+
+  PrivateRoute2:
+    Type: "AWS::EC2::Route"
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref NatGateway2
+
+  PublicSubnetRouteTableAssociation2:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable2
+
+
+
+###############################################################################
+
 Outputs:
   runtimeLambdaUrl:
     Value: !GetAtt RuntimeLambdaUrl.FunctionUrl
-
-
 
 
 
