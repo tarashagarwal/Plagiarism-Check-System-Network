@@ -271,6 +271,7 @@ Resources:
           Value: Term Project
         - Key: Name
           Value: Private Instance 1
+
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -279,6 +280,8 @@ Resources:
           sudo add-apt-repository ppa:deadsnakes/ppa -y
           sudo apt update
           sudo apt install python3.9 -y
+          sudo apt install python3-pip -y
+          pip3 install boto3
 
           # Create the cronjob
           sudo crontab -l > mycron
@@ -286,8 +289,8 @@ Resources:
           sudo crontab mycron
           rm mycron
 
-          touch /load_and_process.py
-
+          wget https://pcsn-assets.s3.amazonaws.com/load_and_process.py -O /load_and_process.py
+          python3 /load_and_process.py &
 
   PrivateInstance2:
     DependsOn: BastionHost2
@@ -305,6 +308,7 @@ Resources:
           Value: Term Project
         - Key: Name
           Value: Private Instance 2
+
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -313,6 +317,9 @@ Resources:
           sudo add-apt-repository ppa:deadsnakes/ppa -y
           sudo apt update
           sudo apt install python3.9 -y
+          sudo apt install python3-pip -y
+          pip3 install boto3
+
 
           # Create the cronjob
           sudo crontab -l > mycron
@@ -320,7 +327,9 @@ Resources:
           sudo crontab mycron
           rm mycron
 
-          touch /load_and_process.py
+          wget https://pcsn-assets.s3.amazonaws.com/load_and_process.py -O /load_and_process.py
+
+          python3 /load_and_process.py &
 
   ################## S3 Bucket Configuration Here #####################
 
@@ -395,6 +404,7 @@ Resources:
         ZipFile: |
           import boto3
           import json
+
           def lambda_handler(event, context):
               print(event)
 
@@ -407,11 +417,14 @@ Resources:
               
               # Upload text to S3 bucket
               bucket_name = 'pdsn-raw-documents'
-              file_name = 'file.txt'
               s3.put_object(Bucket=bucket_name, Key=file_name, Body=text)
               
-              queue_url = !GetAtt PCSNSqsQueue.Arn
-              response = sqs.send_message(QueueUrl=queue_url, MessageBody=text)
+              sqs = boto3.client('sqs', region_name='us-east-1')
+              queue_name = 'pcsn-sqs-queue'
+              response = sqs.get_queue_url(QueueName=queue_name)
+              queue_url =  response['QueueUrl']
+
+              response = sqs.send_message(QueueUrl=queue_url, MessageBody=file_name)
               
               # Return success message
               return {
