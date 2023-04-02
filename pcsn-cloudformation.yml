@@ -209,7 +209,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          # CidrIp: !Sub "${BastionHost2EIP.AllocationId}/32"
+  
           CidrIp: !Sub "0.0.0.0/0"
       Tags:
         - Key: Type
@@ -253,8 +253,7 @@ Resources:
         - Key: Type
           Value: Term Project
         - Key: Name
-          Value: PCSN-Bastion-Host
-
+          Value: PCSN-Bastion-Host    
 
   PrivateInstance1:
     DependsOn: BastionHost1
@@ -272,6 +271,23 @@ Resources:
           Value: Term Project
         - Key: Name
           Value: Private Instance 1
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo apt update
+          sudo apt install software-properties-common -y
+          sudo add-apt-repository ppa:deadsnakes/ppa -y
+          sudo apt update
+          sudo apt install python3.9 -y
+
+          # Create the cronjob
+          sudo crontab -l > mycron
+          echo "0 * * * * /usr/bin/python3 /load_and_process.py" >> mycron
+          sudo crontab mycron
+          rm mycron
+
+          touch /load_and_process.py
+
 
   PrivateInstance2:
     DependsOn: BastionHost2
@@ -289,6 +305,22 @@ Resources:
           Value: Term Project
         - Key: Name
           Value: Private Instance 2
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo apt update
+          sudo apt install software-properties-common -y
+          sudo add-apt-repository ppa:deadsnakes/ppa -y
+          sudo apt update
+          sudo apt install python3.9 -y
+
+          # Create the cronjob
+          sudo crontab -l > mycron
+          echo "0 * * * * /usr/bin/python3 /load_and_process.py" >> mycron
+          sudo crontab mycron
+          rm mycron
+
+          touch /load_and_process.py
 
   ################## S3 Bucket Configuration Here #####################
 
@@ -361,15 +393,35 @@ Resources:
       FunctionName: "PCSNF-doc-upload-function"
       Code:
         ZipFile: |
-          exports.handler = async (event, context) => {
-            return {
-              statusCode: 200,
-              body: "Hello, world!"
-            };
-          }
-      Handler: "index.handler"
+          import boto3
+          import json
+          def lambda_handler(event, context):
+              print(event)
+
+              body = json.loads(event['body'])
+              text = body['text']
+              file_name = body["filename"]
+              
+              # Create S3 client
+              s3 = boto3.client('s3')
+              
+              # Upload text to S3 bucket
+              bucket_name = 'pdsn-raw-documents'
+              file_name = 'file.txt'
+              s3.put_object(Bucket=bucket_name, Key=file_name, Body=text)
+              
+              queue_url = !GetAtt PCSNSqsQueue.Arn
+              response = sqs.send_message(QueueUrl=queue_url, MessageBody=text)
+              
+              # Return success message
+              return {
+                  'statusCode': 200,
+                  'body': 'Document Submitted Successfully'
+              }
+
+      Handler: "index.lambda_handler"
       Role: "arn:aws:iam::596092100714:role/LabRole"
-      Runtime: "nodejs14.x"
+      Runtime: "python3.9"
 
   PCSNFunctionPolicy:
     Type: AWS::Lambda::Permission
