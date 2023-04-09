@@ -9,6 +9,7 @@ aws_session_token='FwoGZXIvYXdzEKH//////////wEaDK8k2C4Nzw3aakz0qiLAAUsRGX7Rk1ksz
 def append_to_file(message):
     with open("/tmp/output.logs", 'a') as f:
         f.write(message + '\n')
+    print(message)
 
 # Set up SQS client
 sqs = boto3.client('sqs', region_name='us-east-1', aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key,aws_session_token=aws_session_token)
@@ -59,9 +60,14 @@ while True:
 
             detector = CopyDetector(test_dirs=["/tmp/"], extensions=["txt"], display_t=0.5)
             detector.run()
+            detector.generate_html_report()
+
+            append_to_file("Uploading Report to S3")
+
+            append_to_file("Clearing Files Up")
 
             # Upload the file to the destination bucket
-            s3.upload_file('report.html', destination_bucket_name, filename)
+            s3.upload_file('report.html', destination_bucket_name, filename + "_report.html")
 
             s3.delete_object(Bucket=source_bucket_name, Key=filename)
 
@@ -76,6 +82,8 @@ while True:
                 TopicArn=topic_arn,
                 Message='File ' + filename + ' has been processed from ' + source_bucket_name + ' and report puublished to ' + destination_bucket_name
             )
+
+            append_to_file("Cleaning Up Queues")
 
             # Delete the message from the queue
             sqs.delete_message(
