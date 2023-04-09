@@ -319,6 +319,7 @@ Resources:
           sudo apt install python3.9 -y
           sudo apt install python3-pip -y
           pip3 install boto3
+          pip3 install copydetect
 
 
           # Create the cronjob
@@ -385,11 +386,11 @@ Resources:
             Condition:
               StringEquals:
                 aws:sourceVpc: !Ref PlagiarismCheckSystemVPC
+                aws:sourceVpce: !Ref PCSNProcessedDocumentBucketEndpoint
               'ArnLike':
                 aws:SourceArn: !Join ['', ['arn:aws:ec2:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':subnet/', !Ref PrivateSubnet1]]
               'ArnLike':
                 aws:SourceArn: !Join ['', ['arn:aws:ec2:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':subnet/', !Ref PrivateSubnet2]]
-                'aws:sourceVpce': !Ref PCSNProcessedDocumentBucketEndpoint
 
   PCSNSqsQueue:
     Type: AWS::SQS::Queue

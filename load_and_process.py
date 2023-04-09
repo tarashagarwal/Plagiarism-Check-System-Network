@@ -1,8 +1,10 @@
 import boto3
+from copydetect import CopyDetector
+import os
 
-aws_access_key_id='ASIAYVSO3UBVDPFCUSUW'
-aws_secret_access_key='ZSVnPB6ORddih+phuGkn5DkLr0YYSrbkXUJfO2e+'
-aws_session_token='FwoGZXIvYXdzEPr//////////wEaDNtod3ucb8eIB4hOOCLAAahyWS2p4tmqQ4ZxQ9rUjSI2F0DFVOZFh/hpDiUUW0KpcbenpXzYH08OMgI6IGdLvGVUopT8qXeKV4reRi+A5t2JLGFkZEW1ZXP3kuVrBeumNYxuU5MYPIBt4vgAD7XkG88RZxohrgVL8jEryLnN76vO8VN6sF3tjNyi8j/rlmpI0eHCQTACSmfvz609LxiLq1B+a6Zqn1VN89E9gtHQFyphC2y1Qhiadr22sooQKOnOGJ1MPgqhZkVk1K0AREM4cijx16ahBjItbahxK9wmXWKRBWX/9qu2YpUhjNHeoufoVIvO9bhaQDod2/Hqspc59li1LVEK'
+aws_access_key_id='ASIAYVSO3UBVF2W3BIG7'
+aws_secret_access_key='P83usLZN5l9u7twEKAWbvPcVLxy8/cq2ttuyFL61'
+aws_session_token='FwoGZXIvYXdzEKH//////////wEaDK8k2C4Nzw3aakz0qiLAAUsRGX7Rk1ksz8UWuEKfzvXR9l+/O9c29Ptkh/2K77sx3tor8p1O/ujTK3Zbw3m8cmL1CQ9gFRCqaoZ9jCw/G/8y9Mm7IXgpxCl6PzP/K7urX84zX6H0PqxLGzEVFtXFjBVJAUSK9ChRWzv1mr5XmFoVn4WMbhMOTafYxAJKc22tmfH/+3X3Hy1/2Z6tmz7IGG8vi1c5K8Ix06Sop3f00+V66tgewkWblIAtjccYjbECj4k0zbiHA1UklWpcXfqrtCixtcuhBjItD8o6yfgmtnaB/xEcTkyQQN/dT3AXh15MOYOK+VJKDHxI8vZBvkKSsVjVa2P9'
 
 def append_to_file(message):
     with open("/tmp/output.logs", 'a') as f:
@@ -55,10 +57,17 @@ while True:
             # Download the file from S3
             s3.download_file(source_bucket_name, filename, '/tmp/' + filename)
 
+            detector = CopyDetector(test_dirs=["/tmp/"], extensions=["txt"], display_t=0.5)
+            detector.run()
+
             # Upload the file to the destination bucket
-            s3.upload_file('/tmp/' + filename, destination_bucket_name, filename)
+            s3.upload_file('report.html', destination_bucket_name, filename)
 
             s3.delete_object(Bucket=source_bucket_name, Key=filename)
+
+            file_path = "report.html"
+
+            os.remove(file_path)
 
             # Send an SNS message
             append_to_file("Publishing file to Topic:" + topic_arn)
