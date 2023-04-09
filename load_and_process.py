@@ -74,7 +74,7 @@ while True:
 
             sns.publish(
                 TopicArn=topic_arn,
-                Message='File ' + filename + ' has been transferred from ' + source_bucket_name + ' to ' + destination_bucket_name
+                Message='File ' + filename + ' has been processed from ' + source_bucket_name + ' and report puublished to ' + destination_bucket_name
             )
 
             # Delete the message from the queue
